@@ -26,7 +26,9 @@ def dump_data_from_api(start_id, finish_id):
 
 def extract_nickname_from_response(json_response):
     assert type(json_response) == dict
-    assert json_response["status"] == "ok"
+    while json_response["status"] != "ok":
+        print(json_response)
+        time.sleep(1)
     result = []
     for i in json_response["data"].values():
         if i:
