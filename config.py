@@ -1,1 +1,1 @@
-wargaming_id = "77636487a299e95a72583de66dba7a63"
+wargaming_id = "13df187423f35b44537fc3289c69364e"

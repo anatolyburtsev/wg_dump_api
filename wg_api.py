@@ -2,6 +2,9 @@ import requests
 import config
 import json
 import time
+import logging
+
+logging.basicConfig(level=logging.CRITICAL)
 
 
 def dump_data_from_api(start_id, finish_id):
@@ -9,8 +12,9 @@ def dump_data_from_api(start_id, finish_id):
     filename = "nicknames_dump_" +str(start_id) + "_" + str(finish_id)
     f = open(filename, 'w')
     S = requests.session()
-
     for i in range((finish_id - start_id) // 100):
+        if i % 10 == 0:
+            logging.critical("current start_id: {}".format(str(start_id + i*100)))
         account_ids_list = []
         for account_id in range(start_id + i*100, start_id + (i+1)*100):
             account_ids_list.append(str(account_id))
