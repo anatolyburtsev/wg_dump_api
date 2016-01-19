@@ -8,6 +8,9 @@ import logging
 # eventlet.monkey_patch()
 logging.basicConfig(level=logging.CRITICAL)
 
+class SourceNotAvailableException(Exception):
+    pass
+
 
 def dump_data_from_api(start_id, finish_id):
     req = "http://api.wotblitz.ru/wotb/account/info/?application_id={}&fields=nickname&account_id={}"
@@ -23,7 +26,15 @@ def dump_data_from_api(start_id, finish_id):
         full_req = req.format(config.wargaming_id, ",".join(account_ids_list))
 
         # with eventlet.Timeout(30):
-        response = requests.get(full_req, timeout=30).json()
+        try:
+            response = S.get(full_req, timeout=30).json()
+        except SourceNotAvailableException:
+            logging.error("Caught SOURCE_NOT_AVAILABLE, start_id + i*100 = " + str(start_id + i*100))
+            S.close()
+            time.sleep(1)
+            S = requests.session()
+            response = S.get(full_req, timeout=30).json()
+
         nicknames = extract_nickname_from_response(response)
         for i in nicknames:
             f.write(i+"\n")
@@ -35,6 +46,8 @@ def extract_nickname_from_response(json_response):
     time_to_sleep = 1
     time_to_sleep_limit = 60
     while json_response["status"] != "ok":
+        if json_response["error"]["code"] == 504:
+            raise SourceNotAvailableException
         print(json_response)
         time.sleep(time_to_sleep)
         if time_to_sleep < time_to_sleep_limit:
@@ -50,7 +63,7 @@ def extract_nickname_from_response(json_response):
 
 if __name__ == "__main__":
     t = time.time()
-    dump_data_from_api(6253000, 100000000)
+    dump_data_from_api(10561000, 100000000)
     print(str(time.time() - t) + " secs")
 
     # file = "test/accounts.json"
