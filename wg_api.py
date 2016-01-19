@@ -61,8 +61,6 @@ def extract_nickname_from_response(json_response):
     return result
 
 
-
-
 if __name__ == "__main__":
     t = time.time()
     dump_data_from_api(10561000, 100000000)
