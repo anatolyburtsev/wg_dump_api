@@ -3,14 +3,16 @@ import config
 import json
 import time
 import logging
+# import eventlet
 
+# eventlet.monkey_patch()
 logging.basicConfig(level=logging.CRITICAL)
 
 
 def dump_data_from_api(start_id, finish_id):
     req = "http://api.wotblitz.ru/wotb/account/info/?application_id={}&fields=nickname&account_id={}"
     filename = "nicknames_dump_" +str(start_id) + "_" + str(finish_id)
-    f = open(filename, 'w')
+    f = open(filename, 'a')
     S = requests.session()
     for i in range((finish_id - start_id) // 100):
         if i % 10 == 0:
@@ -20,19 +22,23 @@ def dump_data_from_api(start_id, finish_id):
             account_ids_list.append(str(account_id))
         full_req = req.format(config.wargaming_id, ",".join(account_ids_list))
 
-        response = S.get(full_req).json()
+        # with eventlet.Timeout(30):
+        response = requests.get(full_req, timeout=30).json()
         nicknames = extract_nickname_from_response(response)
         for i in nicknames:
             f.write(i+"\n")
-
     f.close()
 
 
 def extract_nickname_from_response(json_response):
     assert type(json_response) == dict
+    time_to_sleep = 1
+    time_to_sleep_limit = 60
     while json_response["status"] != "ok":
         print(json_response)
-        time.sleep(1)
+        time.sleep(time_to_sleep)
+        if time_to_sleep < time_to_sleep_limit:
+            time_to_sleep *= 2
     result = []
     for i in json_response["data"].values():
         if i:
@@ -44,7 +50,7 @@ def extract_nickname_from_response(json_response):
 
 if __name__ == "__main__":
     t = time.time()
-    dump_data_from_api(0, 100000000)
+    dump_data_from_api(6253000, 100000000)
     print(str(time.time() - t) + " secs")
 
     # file = "test/accounts.json"
