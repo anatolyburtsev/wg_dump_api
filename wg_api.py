@@ -26,16 +26,18 @@ def dump_data_from_api(start_id, finish_id):
         full_req = req.format(config.wargaming_id, ",".join(account_ids_list))
 
         # with eventlet.Timeout(30):
+        response = S.get(full_req, timeout=30).json()
+
         try:
-            response = S.get(full_req, timeout=30).json()
+            nicknames = extract_nickname_from_response(response)
         except SourceNotAvailableException:
             logging.error("Caught SOURCE_NOT_AVAILABLE, start_id + i*100 = " + str(start_id + i*100))
             S.close()
             time.sleep(1)
             S = requests.session()
             response = S.get(full_req, timeout=30).json()
+            nicknames = extract_nickname_from_response(response)
 
-        nicknames = extract_nickname_from_response(response)
         for i in nicknames:
             f.write(i+"\n")
     f.close()
